@@ -3,7 +3,7 @@ use Test::More;
 use strict;
 use warnings;
 
-use TKS::Web;
+use TKSWeb;
 
 ok(1, 'loaded main app library');
 
