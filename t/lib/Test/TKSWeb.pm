@@ -39,21 +39,38 @@ sub login {
 
 }
 
-sub create_activity {
+sub wr_system {
     my $self = shift;
-    my %params = @_;
 
-    $params{user} //= $self->{user} // schema->resultset('AppUser')->find(
+    $self->{wr_system} //= schema->resultset('WRSystem')->find(
+        {
+            name => 'catalyst',
+        }
+    );
+
+    return $self->{wr_system};
+}
+
+sub user {
+    my $self = shift;
+
+    $self->{user} //= schema->resultset('AppUser')->find(
         {
             email => 'vagrant',
         }
     );
 
-    $params{wr_system} //= $self->{wr_system} // schema->resultset('WRSystem')->find(
-        {
-            name => 'catalyst',
-        }
-    );
+    return $self->{user};
+
+}
+
+sub create_activity {
+    my $self = shift;
+    my %params = @_;
+
+    $params{user} //= $self->user;
+
+    $params{wr_system} //= $self->wr_system;
 
     schema->resultset('Activity')->create(
         {

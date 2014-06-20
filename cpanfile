@@ -1,6 +1,8 @@
 requires 'JSON';
 requires 'Template';
 requires 'DateTime';
+requires 'DateTime::Span';
+requires 'DateTime::Format::DateParse';
 requires 'DBIx::Class';
 requires 'DBIx::Class::Schema::Loader';
 requires 'DateTime::Format::SQLite';

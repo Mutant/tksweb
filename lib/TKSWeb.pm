@@ -8,6 +8,8 @@ use Dancer::Plugin::CDN;
 use TKSWeb::Schema;
 
 use DateTime;
+use DateTime::Span;
+use DateTime::Format::DateParse;
 use MIME::Lite;
 use HTML::FillInForm;
 
@@ -331,6 +333,11 @@ get qr{^/week/?(?<date>.*)$} => sub {
 post '/activity' => sub {
     my $new = from_json( request->body );
     my $start_date_time = combine_date_time($new->{date}, $new->{start_time});
+
+    if (check_for_existing_activities($start_date_time, $new->{duration}, $new->{wr_system_id})) {
+        return status 'conflict';
+    }
+
     my $activity = Activity->new({
         app_user_id   => var('user')->id,
         date_time     => $start_date_time,
@@ -644,6 +651,43 @@ sub combine_date_time {
     return sprintf('%s %02u:%02u:00', $date, $hours, $minutes);
 }
 
+# Check to see if there are existing activities which overlap
+#  this one
+# Returns true if there are existing activities, false otherwise
+sub check_for_existing_activities {
+    my ($start_time, $duration, $wr_system_id) = @_;
+
+    my $user = var 'user';
+
+    my $start_time_dt = DateTime::Format::DateParse->parse_datetime($start_time);
+    my $end_time_dt = $start_time_dt->clone->add( minutes => $duration );
+
+    # Activities can only overlap within the same day
+    my $period_start = $start_time_dt->ymd . ' 00:00:00';
+    my $period_end = $start_time_dt->clone->add( days => 1 )->ymd . ' 00:00:00';
+
+    my @activities = Activity->search(
+        {
+            app_user_id => $user->id,
+            wr_system_id => $wr_system_id,
+            date_time => {
+              -between => [ $period_start, $period_end ],
+            },
+        }
+    );
+
+    # Check each activity to see if it overlaps with the one we're
+    #  about to create
+    my $new_activity_span = DateTime::Span->from_datetimes( start => $start_time_dt, end => $end_time_dt );
+    foreach my $activity (@activities) {
+        my $existing_activity_span = DateTime::Span->from_datetimes( start => $activity->date_time, end => $activity->end_date );
+
+        return 1 if $existing_activity_span->intersects($new_activity_span);
+    }
+
+    return 0;
+
+}
 
 sub add_debug_key {
     my($tokens) = @_;

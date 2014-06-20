@@ -6,6 +6,8 @@ use strict;
 use warnings;
 
 __PACKAGE__->table('activity');
+__PACKAGE__->load_components(qw/InflateColumn::DateTime/);
+
 __PACKAGE__->add_columns(
     activity_id  => {
                         data_type     => 'integer',
@@ -40,6 +42,12 @@ __PACKAGE__->add_columns(
 __PACKAGE__->set_primary_key('activity_id');
 
 __PACKAGE__->belongs_to( app_user => AppUser => { 'foreign.app_user_id' => 'self.app_user_id' } );
+
+sub end_date {
+    my $self = shift;
+
+    return $self->date_time->clone->add( minutes => $self->duration );
+}
 
 1;
 
