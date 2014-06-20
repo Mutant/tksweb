@@ -10,6 +10,7 @@ use Dancer qw/:syntax :tests/;
 use TKSWeb;
 Dancer::set environment => 'unittest';
 Dancer::Config->load;
+use Dancer::Test;
 
 use File::Copy;
 use FindBin;
@@ -21,6 +22,20 @@ sub test_setup : Tests(setup) {
 
 sub clear_session {
     session->destroy;
+}
+
+sub login {
+    my $self = shift;
+
+    my %params = (
+        email => 'vagrant',
+        password => 'vagrant',
+    );
+
+    my $resp = dancer_response('POST', '/login', { params => \%params } );
+
+    die "Failed logging in" unless $resp->status eq '302';
+
 }
 
 1;
