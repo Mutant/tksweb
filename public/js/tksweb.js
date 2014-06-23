@@ -112,6 +112,26 @@
         is_dirty: function(){
             return this.attributes.sync_id > 0;
         },
+        save: function(attributes, options) {
+        	// Override save to we handle server errors properly
+        	if (typeof options == 'undefined') {
+        		options = {};
+        	}
+
+        	options.error = function(model, response){
+        		model.unselect();
+        		model.destroy();
+
+        		if (response.status == 409) {
+        			alert("Error: Overlapping activity!\n\nHint: refresh your browser");
+        		}
+        		else {
+        			alert("Unknown Server Error:" + response.statusText + " (" + response.status + ")");
+        		}
+        	};
+
+            return Backbone.Model.prototype.save.call(this, attributes, options);
+        },
         deferred_save: function() {
             if(this.current_deferred_save) {
                 clearTimeout( this.current_deferred_save );

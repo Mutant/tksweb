@@ -335,7 +335,8 @@ post '/activity' => sub {
     my $start_date_time = combine_date_time($new->{date}, $new->{start_time});
 
     if (check_for_existing_activities($start_date_time, $new->{duration}, $new->{wr_system_id})) {
-        return status 'conflict';
+        status 'conflict';
+        return "Activity overlaps with an existing one";
     }
 
     my $activity = Activity->new({
@@ -356,6 +357,12 @@ put '/activity/:id' => sub {
         or return status "not_found";
     my $new = from_json( request->body );
     my $start_date_time = combine_date_time($new->{date}, $new->{start_time});
+
+    if (check_for_existing_activities($start_date_time, $new->{duration}, $new->{wr_system_id})) {
+        status 'conflict';
+        return "Activity overlaps with an existing one";
+    }
+
     $activity->date_time($start_date_time);
     $activity->duration($new->{duration});
     $activity->wr_system_id($new->{wr_system_id});
