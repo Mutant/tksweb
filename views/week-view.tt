@@ -68,6 +68,7 @@
   <input type="submit" class="save" name="save" value="Save" hidefocus="true" tabindex="-1">
 </script>
 
+<input type="hidden" id="refreshed" value="no">
 <script type="text/javascript">
 (function() {
     var dates = [% dates %];
@@ -76,5 +77,19 @@
     TKSWeb.interval_size_minutes = [% interval_size %];
     TKSWeb.show_week($('.week-view'), dates, wr_systems, activities);
 
+    // Force refresh if coming in via back button, etc.
+    var e=document.getElementById("refreshed");
+    if(e.value=="no") {
+        e.value="yes";
+    }
+    else {
+        e.value="no";
+        location.reload();
+    }
 })();
 </script>
+
+
+
+
+<div id="created_activities" style="display: none"></div>
